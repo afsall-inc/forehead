@@ -46,6 +46,10 @@ test = "cargo test --workspace"
 fmt = "cargo fmt --all"
 clippy = "cargo clippy --workspace -- -D warnings"
 
+[tasks.headers]
+description = "Apply license headers to all source files"
+run = "cargo run --package forehead-cli -- apply"
+
 [tasks.ci]
 description = "Run all CI checks"
-depends = ["fmt", "clippy", "test", "build"]
+depends = ["fmt", "headers", "clippy", "test", "build"]

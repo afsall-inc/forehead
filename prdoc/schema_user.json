@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/afsall-labs/forehead/main/prdoc/schema_user.json",
+  "title": "Forehead PRDoc Schema",
+  "description": "JSON Schema definition for Forehead PR documentation",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "title": {
+      "title": "Title of the change",
+      "type": "string",
+      "description": "Title for the PR. Will show up in release notes."
+    },
+    "author": {
+      "title": "Author handle",
+      "type": "string",
+      "description": "Author GitHub handle"
+    },
+    "pr": {
+      "title": "PR number",
+      "type": "integer",
+      "description": "Pull request number"
+    },
+    "doc": {
+      "type": "array",
+      "title": "Documentation for audiences",
+      "description": "Description of the PR for each relevant audience.",
+      "items": { "$ref": "#/$defs/doc" },
+      "minItems": 1
+    },
+    "crates": {
+      "title": "Crates",
+      "description": "List of crates with noticeable changes.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/crate" }
+    }
+  },
+  "required": ["title", "doc", "crates"],
+  "$defs": {
+    "audience": {
+      "oneOf": [
+        {"const": "Framework Dev", "title": "Framework Dev"},
+        {"const": "App Dev", "title": "App Dev"}
+      ]
+    },
+    "crate": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": { "type": "string" },
+        "bump": { "$ref": "#/$defs/semver_bump" },
+        "note": { "type": "string" }
+      },
+      "required": ["name", "bump"]
+    },
+    "semver_bump": {
+      "oneOf": [
+        {"const": "major", "title": "Major"},
+        {"const": "minor", "title": "Minor"},
+        {"const": "patch", "title": "Patch"},
+        {"const": "none", "title": "None"}
+      ]
+    },
+    "doc": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "audience": { "$ref": "#/$defs/audience" },
+        "title": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["audience", "description"]
+    }
+  }
+}
