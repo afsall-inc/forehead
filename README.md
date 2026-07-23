@@ -95,6 +95,48 @@ template = "mit-apache"
 [[mapping]]
 paths = ["repos/enterprise/"]
 template = "gpl3"
+
+[header]
+# Extra keywords on top of built-in defaults (Copyright, SPDX, License)
+# that identify a comment block as a file header.
+# Set to ["none"] to disable all built-in defaults.
+# indicators = []
+# Optional line prepended to every header. Supports template placeholders.
+# greetings = "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم"
+```
+
+## Header Configuration
+
+### `[header]` section
+
+The `[header]` section controls how forehead detects and builds file headers.
+
+**`indicators`** (optional, default: empty)
+
+Extra keywords on top of the built-in defaults (`Copyright`, `SPDX`, `License`) that identify a consecutive comment block as a file header.
+
+| Scenario | Behavior |
+|----------|----------|
+| `indicators = []` (unset) | Built-in defaults apply |
+| `indicators = ["CustomTag"]` | Built-in defaults + `CustomTag` |
+| `indicators = ["none"]` | No keyword detection — any consecutive comment block at the top of a file is treated as a header |
+
+**`greetings`** (optional, default: empty)
+
+An optional line prepended to the very top of every header. Supports template placeholders. For example, a Basmala:
+
+```toml
+[header]
+greetings = "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم"
+```
+
+This will produce:
+
+```rust
+// بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم
+// This file is part of my-project.
+// Copyright (C) 2026-Present Your Name.
+// SPDX-License-Identifier: Apache-2.0 OR MIT
 ```
 
 ## Template Placeholders

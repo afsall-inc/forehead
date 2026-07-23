@@ -12,3 +12,7 @@ mit-apache = "docs/LICENSES/headers/HEADER-MIT-APACHE"
 [[mapping]]
 paths = ["."]
 template = "mit-apache"
+
+[header]
+indicators = []
+# greetings = "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم"

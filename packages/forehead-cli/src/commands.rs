@@ -187,6 +187,14 @@ mit-apache = "docs/LICENSES/headers/HEADER-MIT-APACHE"
 paths = ["."]
 template = "mit-apache"
 
+[header]
+# Extra keywords on top of built-in defaults (Copyright, SPDX, License)
+# that identify a comment block as a file header.
+# Set to ["none"] to disable all built-in defaults.
+# indicators = []
+# Optional line prepended to every header. Supports template placeholders.
+# greetings = "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم"
+
 [file_types]
 "#;
 

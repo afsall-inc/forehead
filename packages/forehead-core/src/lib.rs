@@ -84,6 +84,8 @@ impl Forehead {
 
     pub fn apply(&self, dry_run: bool) -> Result<ApplyReport, ForeheadError> {
         let mut report = ApplyReport::new();
+        let indicators = self.config.header.all_indicators();
+        let greetings = &self.config.header.greetings;
 
         for entry in self.walk_entries() {
             let path = entry.path().to_path_buf();
@@ -107,7 +109,15 @@ impl Forehead {
 
             let subst = self.config.substitution_for(&path, &self.root);
 
-            match apply_header_to_file(&path, &template, &comment_style, &subst, dry_run) {
+            match apply_header_to_file(
+                &path,
+                &template,
+                &comment_style,
+                &subst,
+                dry_run,
+                &indicators,
+                greetings,
+            ) {
                 Ok(true) => report.applied.push(rel),
                 Ok(false) => {}
                 Err(e) => report.errors.push((rel, e.to_string())),
@@ -119,6 +129,8 @@ impl Forehead {
 
     pub fn check(&self) -> Result<CheckReport, ForeheadError> {
         let mut report = CheckReport::new();
+        let indicators = self.config.header.all_indicators();
+        let greetings = &self.config.header.greetings;
 
         for entry in self.walk_entries() {
             let path = entry.path().to_path_buf();
@@ -144,7 +156,14 @@ impl Forehead {
 
             let subst = self.config.substitution_for(&path, &self.root);
 
-            match check_header_on_file(&path, &template, &comment_style, &subst) {
+            match check_header_on_file(
+                &path,
+                &template,
+                &comment_style,
+                &subst,
+                &indicators,
+                greetings,
+            ) {
                 Ok(FileStatus::Correct) => {}
                 Ok(FileStatus::Missing | FileStatus::Wrong) => {
                     report.missing.push(rel);
@@ -158,6 +177,8 @@ impl Forehead {
 
     pub fn list(&self) -> Result<Vec<(std::path::PathBuf, FileStatus)>, ForeheadError> {
         let mut results = Vec::new();
+        let indicators = self.config.header.all_indicators();
+        let greetings = &self.config.header.greetings;
 
         for entry in self.walk_entries() {
             let path = entry.path().to_path_buf();
@@ -186,7 +207,14 @@ impl Forehead {
 
             let subst = self.config.substitution_for(&path, &self.root);
 
-            match check_header_on_file(&path, &template, &comment_style, &subst) {
+            match check_header_on_file(
+                &path,
+                &template,
+                &comment_style,
+                &subst,
+                &indicators,
+                greetings,
+            ) {
                 Ok(status) => results.push((rel, status)),
                 Err(_) => results.push((rel, FileStatus::Wrong)),
             }

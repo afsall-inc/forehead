@@ -50,7 +50,12 @@ forehead init         # Scaffold forehead.toml
 
 ## Config
 
-The `forehead.toml` file defines project metadata, header templates, and path-based mapping rules.
+The `forehead.toml` file defines project metadata, header templates, path-based mapping rules, and header detection settings.
+
+### `[header]` section
+
+- `indicators` — extra keywords on top of built-in defaults (`Copyright`, `SPDX`, `License`) for header detection. Set to `["none"]` to disable all built-in defaults.
+- `greetings` — optional line prepended to every header. Supports template placeholders.
 
 ## Invariants
 
