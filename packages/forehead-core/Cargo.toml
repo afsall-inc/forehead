@@ -1,0 +1,16 @@
+[package]
+name = "forehead-core"
+version.workspace = true
+edition.workspace = true
+license = "Apache-2.0 OR MIT"
+authors.workspace = true
+repository.workspace = true
+description.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+toml.workspace = true
+regex.workspace = true
+walkdir.workspace = true

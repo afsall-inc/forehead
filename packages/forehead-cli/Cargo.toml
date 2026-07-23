@@ -1,0 +1,17 @@
+[package]
+name = "forehead-cli"
+version.workspace = true
+edition.workspace = true
+license = "Apache-2.0 OR MIT"
+authors.workspace = true
+repository.workspace = true
+description.workspace = true
+
+[dependencies]
+forehead-core = { path = "../forehead-core" }
+clap.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+walkdir.workspace = true
+rayon.workspace = true
