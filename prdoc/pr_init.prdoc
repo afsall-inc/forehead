@@ -1,0 +1,25 @@
+---
+title: "feat: initial forehead implementation — Rust tool for license headers"
+
+doc:
+  - audience: Framework Dev
+    description: |
+      Initial implementation of forehead, a Rust tool for creating and
+      maintaining file headers for code license. Includes:
+
+      - forehead-core: library crate with config, template, comment, and
+        header modules (publishable on crates.io)
+      - forehead-cli: CLI binary with apply, check, list, init commands
+      - Supports 30+ file types with correct comment style detection
+      - forehead.toml config with path-based mapping rules
+      - Template placeholders: {project}, {author}, {year}, {year_span},
+        {license}, {repository}, {description}, {file}
+      - CI/CD pipeline: fmt -> clippy -> test -> build
+      - Dual-licensed: Apache-2.0 OR MIT
+
+crates:
+  - name: forehead-core
+    bump: minor
+  - name: forehead-cli
+    bump: minor
+---
