@@ -34,11 +34,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use std::path::Path;
-use std::fs;
-
-use crate::error::ForeheadError;
-use crate::config::Substitution;
+use crate::{config::Substitution, error::ForeheadError};
+use std::{fs, path::Path};
 
 #[derive(Debug, Clone)]
 pub struct HeaderTemplate {
@@ -48,8 +45,9 @@ pub struct HeaderTemplate {
 
 impl HeaderTemplate {
     pub fn from_file(path: &Path) -> Result<Self, ForeheadError> {
-        let content = fs::read_to_string(path)
-            .map_err(|e| ForeheadError::Template(format!("failed to read {}: {e}", path.display())))?;
+        let content = fs::read_to_string(path).map_err(|e| {
+            ForeheadError::Template(format!("failed to read {}: {e}", path.display()))
+        })?;
         let lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
         Ok(HeaderTemplate { content, lines })
     }

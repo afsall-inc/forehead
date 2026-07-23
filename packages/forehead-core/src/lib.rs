@@ -34,12 +34,12 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use std::fs;
-use std::path::Path;
-
-use crate::config::Config;
-use crate::error::ForeheadError;
-use crate::header::{apply_header_to_file, check_header_on_file, FileStatus};
+use crate::{
+    config::Config,
+    error::ForeheadError,
+    header::{apply_header_to_file, check_header_on_file, FileStatus},
+};
+use std::{fs, path::Path};
 use walkdir::WalkDir;
 
 pub mod comment;
@@ -199,7 +199,13 @@ impl Forehead {
         &self.config
     }
 
-    fn apply_cargo_toml_license(&self, path: &Path, rel: &Path, _dry_run: bool, report: &mut ApplyReport) {
+    fn apply_cargo_toml_license(
+        &self,
+        path: &Path,
+        rel: &Path,
+        _dry_run: bool,
+        report: &mut ApplyReport,
+    ) {
         let license_str = self.config.license_for(path, &self.root);
 
         let content = match fs::read_to_string(path) {
@@ -244,7 +250,10 @@ fn update_cargo_toml_license(content: &str, license_str: &str) -> String {
         if trimmed == "[package]" {
             in_package = true;
             new_lines.push(line.to_string());
-        } else if in_package && !found_license && (trimmed.starts_with("license") || trimmed.starts_with("license.workspace")) {
+        } else if in_package
+            && !found_license
+            && (trimmed.starts_with("license") || trimmed.starts_with("license.workspace"))
+        {
             new_lines.push(format!("license = \"{license_str}\""));
             found_license = true;
             in_package = false;

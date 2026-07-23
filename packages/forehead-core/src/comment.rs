@@ -71,42 +71,42 @@ pub fn comment_style_for(path: &Path) -> Option<CommentStyle> {
     // Check by extension
     match ext {
         // // line comments
-        "rs" | "go" | "c" | "h" | "cpp" | "hpp" | "cc" | "cxx" | "hh" | "java"
-        | "js" | "ts" | "jsx" | "tsx" | "kt" | "kts" | "swift" | "zig" | "dart"
-        | "php" | "m" | "mm" | "cs" | "scala" | "groovy" | "vala" | "v" | "nu"
-        | "svelte" | "vue" => Some(CommentStyle::Line("//".to_string())),
+        "rs" | "go" | "c" | "h" | "cpp" | "hpp" | "cc" | "cxx" | "hh" | "java" | "js" | "ts"
+        | "jsx" | "tsx" | "kt" | "kts" | "swift" | "zig" | "dart" | "php" | "m" | "mm" | "cs"
+        | "scala" | "groovy" | "vala" | "v" | "nu" | "svelte" | "vue" => {
+            Some(CommentStyle::Line("//".to_string()))
+        }
 
         // # line comments
-        "py" | "rb" | "pl" | "pm" | "sh" | "bash" | "zsh" | "fish" | "yaml"
-        | "yml" | "toml" | "r" | "R" | "rake" | "gemspec" | "erb" | "el" | "ex"
-        | "exs" | "jl" | "coffee" | "csh" | "awk" | "tcl" | "mk" | "ninja"
-        | "bzl" | "BUILD" | "WORKSPACE" | "dhall" | "nix" | "conf" | "cfg"
-        | "ini" | "desktop" | "service" | "timer" | "diff" | "patch" | "ziggy"
-        | "ziggy-schema" => Some(CommentStyle::Line("#".to_string())),
+        "py" | "rb" | "pl" | "pm" | "sh" | "bash" | "zsh" | "fish" | "yaml" | "yml" | "toml"
+        | "r" | "R" | "rake" | "gemspec" | "erb" | "el" | "ex" | "exs" | "jl" | "coffee"
+        | "csh" | "awk" | "tcl" | "mk" | "ninja" | "bzl" | "BUILD" | "WORKSPACE" | "dhall"
+        | "nix" | "conf" | "cfg" | "ini" | "desktop" | "service" | "timer" | "diff" | "patch"
+        | "ziggy" | "ziggy-schema" => Some(CommentStyle::Line("#".to_string())),
 
         // -- line comments
-        "sql" | "hs" | "lhs" | "lua" | "ada" | "adb" | "ads" | "sqlite" | "sqlite3"
-        | "vhd" | "vhdl" => Some(CommentStyle::Line("--".to_string())),
+        "sql" | "hs" | "lhs" | "lua" | "ada" | "adb" | "ads" | "sqlite" | "sqlite3" | "vhd"
+        | "vhdl" => Some(CommentStyle::Line("--".to_string())),
 
-        // % line comments  
-        "tex" | "sty" | "cls" | "ltx" | "bib" | "matlab" | "maxima"
-        | "prolog" => Some(CommentStyle::Line("%".to_string())),
+        // % line comments
+        "tex" | "sty" | "cls" | "ltx" | "bib" | "matlab" | "maxima" | "prolog" => {
+            Some(CommentStyle::Line("%".to_string()))
+        }
 
         // ; line comments
-        "lisp" | "lsp" | "clj" | "cljs" | "cljc" | "edn" | "scm" | "ss"
-        => Some(CommentStyle::Line(";".to_string())),
+        "lisp" | "lsp" | "clj" | "cljs" | "cljc" | "edn" | "scm" | "ss" => {
+            Some(CommentStyle::Line(";".to_string()))
+        }
 
         // <!-- --> block comments
-        "html" | "htm" | "xhtml" | "xml" | "xsl" | "xslt" | "xsd" | "svg"
-        | "md" | "markdown" | "rmd" | "mdown" | "mkdn" | "mdx" => {
+        "html" | "htm" | "xhtml" | "xml" | "xsl" | "xslt" | "xsd" | "svg" | "md" | "markdown"
+        | "rmd" | "mdown" | "mkdn" | "mdx" => {
             Some(CommentStyle::Block("<!--".to_string(), "-->".to_string()))
         }
 
         // /* */ block comments
-        "css" | "scss" | "sass" | "less" | "graphql" | "gql" | "proto"
-        | "flatbuffers" | "fbs" | "solidity" | "sol" => {
-            Some(CommentStyle::Block("/*".to_string(), "*/".to_string()))
-        }
+        "css" | "scss" | "sass" | "less" | "graphql" | "gql" | "proto" | "flatbuffers" | "fbs"
+        | "solidity" | "sol" => Some(CommentStyle::Block("/*".to_string(), "*/".to_string())),
 
         _ => None,
     }
@@ -114,18 +114,17 @@ pub fn comment_style_for(path: &Path) -> Option<CommentStyle> {
 
 pub fn format_as_comment(lines: &[String], style: &CommentStyle) -> String {
     match style {
-        CommentStyle::Line(prefix) => {
-            lines.iter()
-                .map(|l| {
-                    if l.trim().is_empty() {
-                        prefix.clone()
-                    } else {
-                        format!("{} {}", prefix, l.trim())
-                    }
-                })
-                .collect::<Vec<_>>()
-                .join("\n")
-        }
+        CommentStyle::Line(prefix) => lines
+            .iter()
+            .map(|l| {
+                if l.trim().is_empty() {
+                    prefix.clone()
+                } else {
+                    format!("{} {}", prefix, l.trim())
+                }
+            })
+            .collect::<Vec<_>>()
+            .join("\n"),
         CommentStyle::Block(open, close) => {
             let mut result = open.clone();
             result.push('\n');

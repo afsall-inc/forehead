@@ -34,13 +34,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use std::path::Path;
-use std::fs;
-
-use crate::comment::{CommentStyle, format_as_comment};
-use crate::config::Substitution;
-use crate::error::ForeheadError;
-use crate::template::HeaderTemplate;
+use crate::{
+    comment::{format_as_comment, CommentStyle},
+    config::Substitution,
+    error::ForeheadError,
+    template::HeaderTemplate,
+};
+use std::{fs, path::Path};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum FileStatus {
@@ -222,7 +222,8 @@ fn is_license_line(line: &str) -> bool {
 }
 
 fn normalize_header(header: &str) -> String {
-    header.lines()
+    header
+        .lines()
         .map(|l| l.trim().to_lowercase())
         .filter(|l| !l.is_empty())
         .collect::<Vec<_>>()
@@ -257,11 +258,7 @@ fn replace_header(
     }
 }
 
-fn prepend_header(
-    content: &str,
-    header: &str,
-    _style: &CommentStyle,
-) -> String {
+fn prepend_header(content: &str, header: &str, _style: &CommentStyle) -> String {
     let trimmed = content.trim_start();
     format!("{}\n\n{}", header, trimmed)
 }
@@ -269,9 +266,7 @@ fn prepend_header(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::comment::CommentStyle;
-    use crate::config::Substitution;
-    use crate::template::HeaderTemplate;
+    use crate::{comment::CommentStyle, config::Substitution, template::HeaderTemplate};
 
     fn test_subst() -> Substitution {
         Substitution {
@@ -305,7 +300,8 @@ mod tests {
         let style = CommentStyle::Line("//".into());
         let subst = test_subst();
 
-        let content = "// Old copyright notice.\n// SPDX-License-Identifier: MIT\n\npub fn hello() {}\n";
+        let content =
+            "// Old copyright notice.\n// SPDX-License-Identifier: MIT\n\npub fn hello() {}\n";
         let expected = "// This file is part of TestProject.\n// Copyright (C) 2026-Present Test Author.\n// SPDX-License-Identifier: Apache-2.0 OR MIT.\n\npub fn hello() {}\n";
 
         let result = apply_header_to_file_str(content, &template, &style, &subst);

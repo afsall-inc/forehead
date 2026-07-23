@@ -34,13 +34,13 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use std::fs;
-
+use crate::{error::ForeheadError, template::HeaderTemplate};
 use serde::Deserialize;
-use crate::error::ForeheadError;
-use crate::template::HeaderTemplate;
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+};
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Config {
@@ -128,11 +128,14 @@ pub struct Substitution {
 
 impl Config {
     pub fn from_path(path: &Path) -> Result<Self, ForeheadError> {
-        let contents = fs::read_to_string(path)
-            .map_err(|e| ForeheadError::Config(format!("failed to read {}: {e}", path.display())))?;
-        let mut config: Config = toml::from_str(&contents)
-            .map_err(|e| ForeheadError::Config(format!("failed to parse {}: {e}", path.display())))?;
-        config.project_dir = path.parent()
+        let contents = fs::read_to_string(path).map_err(|e| {
+            ForeheadError::Config(format!("failed to read {}: {e}", path.display()))
+        })?;
+        let mut config: Config = toml::from_str(&contents).map_err(|e| {
+            ForeheadError::Config(format!("failed to parse {}: {e}", path.display()))
+        })?;
+        config.project_dir = path
+            .parent()
             .filter(|p| !p.as_os_str().is_empty())
             .unwrap_or_else(|| {
                 // If parent is empty (config in current dir), use "."
@@ -163,14 +166,21 @@ impl Config {
         let rel = file_path.strip_prefix(root).unwrap_or(file_path);
         let rel_str = rel.to_string_lossy();
 
-        let template_key = self.mapping.iter()
-            .find(|m| m.paths.iter().any(|p| {
-                p.as_str() == "." || p.is_empty() || rel_str.starts_with(p.as_str())
-            }))
+        let template_key = self
+            .mapping
+            .iter()
+            .find(|m| {
+                m.paths
+                    .iter()
+                    .any(|p| p.as_str() == "." || p.is_empty() || rel_str.starts_with(p.as_str()))
+            })
             .map(|m| &m.template);
 
         let template_key = template_key.unwrap_or_else(|| {
-            self.templates.keys().next().expect("at least one template required")
+            self.templates
+                .keys()
+                .next()
+                .expect("at least one template required")
         });
 
         let tpath = self.templates.get(template_key)?;
@@ -182,22 +192,27 @@ impl Config {
         let rel_str = rel.to_string_lossy();
         let fname = file_path.file_name().and_then(|s| s.to_str()).unwrap_or("");
 
-        let mapping = self.mapping.iter()
-            .find(|m| m.paths.iter().any(|p| {
-                p.as_str() == "." || p.is_empty() || rel_str.starts_with(p.as_str())
-            }));
+        let mapping = self.mapping.iter().find(|m| {
+            m.paths
+                .iter()
+                .any(|p| p.as_str() == "." || p.is_empty() || rel_str.starts_with(p.as_str()))
+        });
 
-        let project = mapping.and_then(|m| m.project.clone())
+        let project = mapping
+            .and_then(|m| m.project.clone())
             .unwrap_or_else(|| self.project.name.clone());
 
-        let author = mapping.and_then(|m| m.author.clone())
+        let author = mapping
+            .and_then(|m| m.author.clone())
             .unwrap_or_else(|| self.project.default_author.clone());
 
-        let year = mapping.and_then(|m| m.year)
+        let year = mapping
+            .and_then(|m| m.year)
             .unwrap_or(self.project.default_year)
             .to_string();
 
-        let year_span = mapping.and_then(|m| m.year_span.clone())
+        let year_span = mapping
+            .and_then(|m| m.year_span.clone())
             .unwrap_or_else(|| {
                 if self.project.year_span.is_empty() {
                     format!("{}-Present", self.project.default_year)
@@ -206,13 +221,16 @@ impl Config {
                 }
             });
 
-        let license = mapping.and_then(|m| m.license.clone())
+        let license = mapping
+            .and_then(|m| m.license.clone())
             .unwrap_or_else(|| self.project.default_license.clone());
 
-        let repository = mapping.and_then(|m| m.repository.clone())
+        let repository = mapping
+            .and_then(|m| m.repository.clone())
             .unwrap_or_else(|| self.project.repository.clone());
 
-        let description = mapping.and_then(|m| m.description.clone())
+        let description = mapping
+            .and_then(|m| m.description.clone())
             .unwrap_or_else(|| self.project.description.clone());
 
         Substitution {
@@ -231,12 +249,14 @@ impl Config {
         let rel = file_path.strip_prefix(root).unwrap_or(file_path);
         let rel_str = rel.to_string_lossy();
 
-        let mapping = self.mapping.iter()
-            .find(|m| m.paths.iter().any(|p| {
-                p.as_str() == "." || p.is_empty() || rel_str.starts_with(p.as_str())
-            }));
+        let mapping = self.mapping.iter().find(|m| {
+            m.paths
+                .iter()
+                .any(|p| p.as_str() == "." || p.is_empty() || rel_str.starts_with(p.as_str()))
+        });
 
-        mapping.and_then(|m| m.license.clone())
+        mapping
+            .and_then(|m| m.license.clone())
             .unwrap_or_else(|| self.project.default_license.clone())
     }
 }

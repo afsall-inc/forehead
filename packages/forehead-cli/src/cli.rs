@@ -37,7 +37,11 @@
 use clap::Parser;
 
 #[derive(Parser)]
-#[command(name = "forehead", version, about = "Create and maintain file headers for code license")]
+#[command(
+    name = "forehead",
+    version,
+    about = "Create and maintain file headers for code license"
+)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Command,

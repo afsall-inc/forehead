@@ -34,25 +34,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-use std::path::Path;
+use crate::cli::{Cli, Command};
 use anyhow::{Context, Result};
 use forehead_core::Forehead;
-use crate::cli::{Cli, Command};
+use std::path::Path;
 
 pub fn run(cli: &Cli) -> Result<()> {
     match &cli.command {
-        Command::Apply { config, dry_run, path } => {
-            apply(config, *dry_run, path.as_deref())
-        }
-        Command::Check { config, json, path } => {
-            check(config, *json, path.as_deref())
-        }
-        Command::List { config, json, path } => {
-            list(config, *json, path.as_deref())
-        }
-        Command::Init { path } => {
-            init(path)
-        }
+        Command::Apply {
+            config,
+            dry_run,
+            path,
+        } => apply(config, *dry_run, path.as_deref()),
+        Command::Check { config, json, path } => check(config, *json, path.as_deref()),
+        Command::List { config, json, path } => list(config, *json, path.as_deref()),
+        Command::Init { path } => init(path),
     }
 }
 
@@ -65,12 +61,10 @@ fn apply(config_path: &str, dry_run: bool, path: Option<&str>) -> Result<()> {
         config.project_dir = Path::new(p).to_path_buf();
         Forehead::new(config)
     } else {
-        Forehead::from_config_path(config_path)
-            .context("failed to read config")?
+        Forehead::from_config_path(config_path).context("failed to read config")?
     };
 
-    let report = forehead.apply(dry_run)
-        .context("failed to apply headers")?;
+    let report = forehead.apply(dry_run).context("failed to apply headers")?;
 
     if dry_run {
         for path in &report.applied {
@@ -101,12 +95,10 @@ fn check(config_path: &str, json: bool, path: Option<&str>) -> Result<()> {
         config.project_dir = Path::new(p).to_path_buf();
         Forehead::new(config)
     } else {
-        Forehead::from_config_path(config_path)
-            .context("failed to read config")?
+        Forehead::from_config_path(config_path).context("failed to read config")?
     };
 
-    let report = forehead.check()
-        .context("failed to check headers")?;
+    let report = forehead.check().context("failed to check headers")?;
 
     if json {
         let output = serde_json::json!({
@@ -128,7 +120,10 @@ fn check(config_path: &str, json: bool, path: Option<&str>) -> Result<()> {
         println!("All headers are correct.");
         Ok(())
     } else {
-        anyhow::bail!("{} files have missing or incorrect headers", report.missing.len());
+        anyhow::bail!(
+            "{} files have missing or incorrect headers",
+            report.missing.len()
+        );
     }
 }
 
@@ -142,24 +137,25 @@ fn list(config_path: &str, json: bool, path: Option<&str>) -> Result<()> {
         config.project_dir = Path::new(p).to_path_buf();
         Forehead::new(config)
     } else {
-        Forehead::from_config_path(config_path)
-            .context("failed to read config")?
+        Forehead::from_config_path(config_path).context("failed to read config")?
     };
 
-    let results = forehead.list()
-        .context("failed to list headers")?;
+    let results = forehead.list().context("failed to list headers")?;
 
     if json {
-        let entries: Vec<serde_json::Value> = results.iter().map(|(p, s)| {
-            serde_json::json!({
-                "file": p.to_string_lossy(),
-                "status": match s {
-                    FileStatus::Correct => "correct",
-                    FileStatus::Missing => "missing",
-                    FileStatus::Wrong => "wrong",
-                }
+        let entries: Vec<serde_json::Value> = results
+            .iter()
+            .map(|(p, s)| {
+                serde_json::json!({
+                    "file": p.to_string_lossy(),
+                    "status": match s {
+                        FileStatus::Correct => "correct",
+                        FileStatus::Missing => "missing",
+                        FileStatus::Wrong => "wrong",
+                    }
+                })
             })
-        }).collect();
+            .collect();
         println!("{}", serde_json::to_string_pretty(&entries)?);
     } else {
         for (path, status) in &results {
@@ -194,8 +190,7 @@ template = "mit-apache"
 [file_types]
 "#;
 
-    std::fs::write(path, config_content)
-        .with_context(|| format!("failed to write {path}"))?;
+    std::fs::write(path, config_content).with_context(|| format!("failed to write {path}"))?;
 
     println!("Created {path}");
     println!("Next steps:");
