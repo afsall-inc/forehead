@@ -1,6 +1,6 @@
 // This file is part of forehead.
 //
-// Copyright (C) 2026-Present Afsall Labs.
+// Copyright (C) 2026-Present Afsall Inc.
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -105,7 +105,7 @@ pub struct ProjectConfig {
 }
 
 fn default_author() -> String {
-    "Afsall Labs".to_string()
+    "Afsall Inc".to_string()
 }
 
 fn default_year() -> u32 {

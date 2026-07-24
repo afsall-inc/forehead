@@ -1,9 +1,9 @@
 [project]
 name = "forehead"
 default_license = "Apache-2.0 OR MIT"
-default_author = "Afsall Labs"
+default_author = "Afsall Inc"
 default_year = 2026
-repository = "https://github.com/afsall-labs/forehead"
+repository = "https://github.com/afsall-inc/forehead"
 description = "A tool for creating and maintaining file headers for code license"
 
 [templates]

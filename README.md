@@ -1,7 +1,7 @@
 <!--
 <!-- This file is part of forehead.
 <!--
-<!-- Copyright (C) 2026-Present Afsall Labs.
+<!-- Copyright (C) 2026-Present Afsall Inc.
 <!-- SPDX-License-Identifier: Apache-2.0 OR MIT
 <!--
 <!-- Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,7 +50,7 @@ cargo install forehead-cli
 Or build from source:
 
 ```bash
-git clone https://github.com/afsall-labs/forehead
+git clone https://github.com/afsall-inc/forehead
 cd forehead
 cargo build --release
 ```
