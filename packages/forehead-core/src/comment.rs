@@ -1,3 +1,4 @@
+// بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم
 // This file is part of forehead.
 //
 // Copyright (C) 2026-Present Afsall Inc.
@@ -99,10 +100,8 @@ pub fn comment_style_for(path: &Path) -> Option<CommentStyle> {
         }
 
         // <!-- --> block comments
-        "html" | "htm" | "xhtml" | "xml" | "xsl" | "xslt" | "xsd" | "svg" | "md" | "markdown"
-        | "rmd" | "mdown" | "mkdn" | "mdx" => {
-            Some(CommentStyle::Block("<!--".to_string(), "-->".to_string()))
-        }
+        "html" | "htm" | "xhtml" | "xml" | "xsl" | "xslt" | "xsd" | "svg" | "rmd" | "mdown"
+        | "mkdn" | "mdx" => Some(CommentStyle::Block("<!--".into(), "-->".into())),
 
         // /* */ block comments
         "css" | "scss" | "sass" | "less" | "graphql" | "gql" | "proto" | "flatbuffers" | "fbs"

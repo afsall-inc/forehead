@@ -15,4 +15,4 @@ template = "mit-apache"
 
 [header]
 indicators = []
-# greetings = "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم"
+greetings = "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم"

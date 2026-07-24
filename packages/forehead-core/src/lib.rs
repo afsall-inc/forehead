@@ -1,3 +1,4 @@
+// بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم
 // This file is part of forehead.
 //
 // Copyright (C) 2026-Present Afsall Inc.
@@ -37,7 +38,7 @@
 use crate::{
     config::Config,
     error::ForeheadError,
-    header::{apply_header_to_file, check_header_on_file, FileStatus},
+    header::{apply_header_to_file, check_header_on_file, remove_header_from_file, FileStatus},
 };
 use std::{fs, path::Path};
 use walkdir::WalkDir;
@@ -225,6 +226,34 @@ impl Forehead {
 
     pub fn config(&self) -> &Config {
         &self.config
+    }
+
+    pub fn remove(&self, dry_run: bool) -> Result<ApplyReport, ForeheadError> {
+        let mut report = ApplyReport::new();
+        let indicators = self.config.header.all_indicators();
+
+        for entry in self.walk_entries() {
+            let path = entry.path().to_path_buf();
+            let fname = entry.file_name().to_str().unwrap_or("").to_string();
+            let rel = path.strip_prefix(&self.root).unwrap_or(&path).to_path_buf();
+
+            if fname == "Cargo.toml" || fname == "Cargo.lock" {
+                continue;
+            }
+
+            let comment_style = match comment::comment_style_for(&path) {
+                Some(s) => s,
+                None => continue,
+            };
+
+            match remove_header_from_file(&path, &comment_style, &indicators, dry_run) {
+                Ok(true) => report.applied.push(rel),
+                Ok(false) => {}
+                Err(e) => report.errors.push((rel, e.to_string())),
+            }
+        }
+
+        Ok(report)
     }
 
     fn apply_cargo_toml_license(

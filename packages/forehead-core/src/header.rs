@@ -1,3 +1,4 @@
+// بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم
 // This file is part of forehead.
 //
 // Copyright (C) 2026-Present Afsall Inc.
@@ -98,6 +99,76 @@ pub fn apply_header_to_file(
             replace_header(&content, &existing, &expected, style)
         }
         None => prepend_header(&content, &expected, style),
+    };
+
+    if new_content == content {
+        return Ok(false);
+    }
+
+    if !dry_run {
+        fs::write(path, &new_content)?;
+    }
+
+    Ok(true)
+}
+
+/// Remove the header from a file. Returns true if the file was modified.
+pub fn remove_header_from_file(
+    path: &Path,
+    style: &CommentStyle,
+    indicators: &[String],
+    dry_run: bool,
+) -> Result<bool, ForeheadError> {
+    let content = fs::read_to_string(path)?;
+
+    let header_block = extract_header_block(&content, style, indicators);
+
+    let new_content = match header_block {
+        Some(existing) => {
+            let after = content[existing.len()..].trim_start();
+            after.to_string()
+        }
+        None => return Ok(false),
+    };
+
+    if new_content == content {
+        return Ok(false);
+    }
+
+    if !dry_run {
+        fs::write(path, &new_content)?;
+    }
+
+    Ok(true)
+}
+
+/// Replace headers in a file using a template. Returns true if the file was modified.
+pub fn replace_header_on_file(
+    path: &Path,
+    template: &HeaderTemplate,
+    style: &CommentStyle,
+    subst: &Substitution,
+    indicators: &[String],
+    greetings: &str,
+    dry_run: bool,
+) -> Result<bool, ForeheadError> {
+    let content = fs::read_to_string(path)?;
+    let expected = build_expected_header(template, style, subst, greetings);
+
+    let header_block = extract_header_block(&content, style, indicators);
+
+    let new_content = match header_block {
+        Some(existing) => {
+            if normalize_header(&existing) == normalize_header(&expected) {
+                return Ok(false);
+            }
+            let after = content[existing.len()..].trim_start();
+            format!("{}\n\n{}", expected, after)
+        }
+        None => {
+            let trimmed = content.trim_start();
+            format!("{}\n\n{}", expected, trimmed)
+        }
     };
 
     if new_content == content {

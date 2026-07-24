@@ -1,3 +1,4 @@
+// بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم
 // This file is part of forehead.
 //
 // Copyright (C) 2026-Present Afsall Inc.
