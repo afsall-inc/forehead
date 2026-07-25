@@ -1,6 +1,7 @@
+// بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم
 // This file is part of forehead.
 //
-// Copyright (C) 2026-Present Afsall Labs.
+// Copyright (C) 2026-Present Afsall Inc.
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,6 +50,11 @@ pub fn run(cli: &Cli) -> Result<()> {
         Command::Check { config, json, path } => check(config, *json, path.as_deref()),
         Command::List { config, json, path } => list(config, *json, path.as_deref()),
         Command::Init { path } => init(path),
+        Command::Remove {
+            config,
+            dry_run,
+            path,
+        } => remove(config, *dry_run, path.as_deref()),
     }
 }
 
@@ -187,6 +193,14 @@ mit-apache = "docs/LICENSES/headers/HEADER-MIT-APACHE"
 paths = ["."]
 template = "mit-apache"
 
+[header]
+# Extra keywords on top of built-in defaults (Copyright, SPDX, License)
+# that identify a comment block as a file header.
+# Set to ["none"] to disable all built-in defaults.
+# indicators = []
+# Optional line prepended to every header. Supports template placeholders.
+# greetings = "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم"
+
 [file_types]
 "#;
 
@@ -196,5 +210,41 @@ template = "mit-apache"
     println!("Next steps:");
     println!("  1. Create your header template files under docs/LICENSES/headers/");
     println!("  2. Run `forehead apply` to apply headers");
+    Ok(())
+}
+
+fn remove(config_path: &str, dry_run: bool, path: Option<&str>) -> Result<()> {
+    let config_path = Path::new(config_path);
+    let forehead = if let Some(p) = path {
+        let mut config = forehead_core::config::Config::from_path(config_path)
+            .context("failed to read config")?;
+        config.project_dir = Path::new(p).to_path_buf();
+        Forehead::new(config)
+    } else {
+        Forehead::from_config_path(config_path).context("failed to read config")?
+    };
+
+    let report = forehead
+        .remove(dry_run)
+        .context("failed to remove headers")?;
+
+    if dry_run {
+        for path in &report.applied {
+            println!("WOULD REMOVE: {}", path.display());
+        }
+    } else {
+        for path in &report.applied {
+            println!("REMOVED: {}", path.display());
+        }
+    }
+
+    for (path, err) in &report.errors {
+        eprintln!("ERROR on {}: {}", path.display(), err);
+    }
+
+    if report.is_empty() {
+        println!("No headers to remove.");
+    }
+
     Ok(())
 }

@@ -1,6 +1,7 @@
+// بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم
 // This file is part of forehead.
 //
-// Copyright (C) 2026-Present Afsall Labs.
+// Copyright (C) 2026-Present Afsall Inc.
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,6 +56,9 @@ pub struct Config {
     pub mapping: Vec<Mapping>,
 
     #[serde(default)]
+    pub header: HeaderConfig,
+
+    #[serde(default)]
     pub file_types: HashMap<String, FileTypeConfig>,
 
     #[serde(default)]
@@ -62,6 +66,27 @@ pub struct Config {
 
     #[serde(default)]
     pub include: Vec<String>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct HeaderConfig {
+    #[serde(default)]
+    pub indicators: Vec<String>,
+    #[serde(default)]
+    pub greetings: String,
+}
+
+const BUILTIN_INDICATORS: &[&str] = &["Copyright", "SPDX", "License"];
+
+impl HeaderConfig {
+    pub fn all_indicators(&self) -> Vec<String> {
+        if self.indicators.len() == 1 && self.indicators[0].eq_ignore_ascii_case("none") {
+            return vec![];
+        }
+        let mut all: Vec<String> = BUILTIN_INDICATORS.iter().map(|s| s.to_string()).collect();
+        all.extend(self.indicators.iter().cloned());
+        all
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -81,7 +106,7 @@ pub struct ProjectConfig {
 }
 
 fn default_author() -> String {
-    "Afsall Labs".to_string()
+    "Afsall Inc".to_string()
 }
 
 fn default_year() -> u32 {

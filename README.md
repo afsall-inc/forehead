@@ -1,42 +1,3 @@
-<!--
-<!-- This file is part of forehead.
-<!--
-<!-- Copyright (C) 2026-Present Afsall Labs.
-<!-- SPDX-License-Identifier: Apache-2.0 OR MIT
-<!--
-<!-- Licensed under the Apache License, Version 2.0 (the "License");
-<!-- you may not use this file except in compliance with the License.
-<!-- You may obtain a copy of the License at
-<!--
-<!-- http://www.apache.org/licenses/LICENSE-2.0
-<!--
-<!-- Unless required by applicable law or agreed to in writing, software
-<!-- distributed under the License is distributed on an "AS IS" BASIS,
-<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-<!-- See the License for the specific language governing permissions and
-<!-- limitations under the License.
-<!--
-<!-- Alternatively, this file is available under the MIT License:
-<!-- Permission is hereby granted, free of charge, to any person obtaining a copy
-<!-- of this software and associated documentation files (the "Software"), to deal
-<!-- in the Software without restriction, including without limitation the rights
-<!-- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-<!-- copies of the Software, and to permit persons to whom the Software is
-<!-- furnished to do so, subject to the following conditions:
-<!--
-<!-- The above copyright notice and this permission notice shall be included in all
-<!-- copies or substantial portions of the Software.
-<!--
-<!-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-<!-- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-<!-- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-<!-- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-<!-- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-<!-- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-<!-- SOFTWARE.
--->
-
-
 # Forehead
 
 A tool for creating and maintaining file headers for code license. Supports CLI and CI/CD workflows.
@@ -50,7 +11,7 @@ cargo install forehead-cli
 Or build from source:
 
 ```bash
-git clone https://github.com/afsall-labs/forehead
+git clone https://github.com/afsall-inc/forehead
 cd forehead
 cargo build --release
 ```
@@ -95,6 +56,48 @@ template = "mit-apache"
 [[mapping]]
 paths = ["repos/enterprise/"]
 template = "gpl3"
+
+[header]
+# Extra keywords on top of built-in defaults (Copyright, SPDX, License)
+# that identify a comment block as a file header.
+# Set to ["none"] to disable all built-in defaults.
+# indicators = []
+# Optional line prepended to every header. Supports template placeholders.
+# greetings = "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم"
+```
+
+## Header Configuration
+
+### `[header]` section
+
+The `[header]` section controls how forehead detects and builds file headers.
+
+**`indicators`** (optional, default: empty)
+
+Extra keywords on top of the built-in defaults (`Copyright`, `SPDX`, `License`) that identify a consecutive comment block as a file header.
+
+| Scenario | Behavior |
+|----------|----------|
+| `indicators = []` (unset) | Built-in defaults apply |
+| `indicators = ["CustomTag"]` | Built-in defaults + `CustomTag` |
+| `indicators = ["none"]` | No keyword detection — any consecutive comment block at the top of a file is treated as a header |
+
+**`greetings`** (optional, default: empty)
+
+An optional line prepended to the very top of every header. Supports template placeholders. For example, a Basmala:
+
+```toml
+[header]
+greetings = "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم"
+```
+
+This will produce:
+
+```rust
+// بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم
+// This file is part of my-project.
+// Copyright (C) 2026-Present Your Name.
+// SPDX-License-Identifier: Apache-2.0 OR MIT
 ```
 
 ## Template Placeholders

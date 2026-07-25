@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/afsall-labs/forehead/main/prdoc/schema_user.json",
+  "$id": "https://raw.githubusercontent.com/afsall-inc/forehead/main/prdoc/schema_user.json",
   "title": "Forehead PRDoc Schema",
   "description": "JSON Schema definition for Forehead PR documentation",
   "type": "object",

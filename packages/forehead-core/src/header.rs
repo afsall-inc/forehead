@@ -1,6 +1,7 @@
+// بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم
 // This file is part of forehead.
 //
-// Copyright (C) 2026-Present Afsall Labs.
+// Copyright (C) 2026-Present Afsall Inc.
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,12 +56,13 @@ pub fn check_header_on_file(
     template: &HeaderTemplate,
     style: &CommentStyle,
     subst: &Substitution,
+    indicators: &[String],
+    greetings: &str,
 ) -> Result<FileStatus, ForeheadError> {
     let content = fs::read_to_string(path)?;
-    let expected_header = format_as_comment(&template.lines, style);
-    let expected = substitute_header(&expected_header, subst);
+    let expected = build_expected_header(template, style, subst, greetings);
 
-    let header_block = extract_header_block(&content, style);
+    let header_block = extract_header_block(&content, style, indicators);
 
     match header_block {
         Some(existing) => {
@@ -81,24 +83,91 @@ pub fn apply_header_to_file(
     style: &CommentStyle,
     subst: &Substitution,
     dry_run: bool,
+    indicators: &[String],
+    greetings: &str,
 ) -> Result<bool, ForeheadError> {
     let content = fs::read_to_string(path)?;
-    let expected_header = format_as_comment(&template.lines, style);
-    let expected = substitute_header(&expected_header, subst);
+    let expected = build_expected_header(template, style, subst, greetings);
 
-    let header_block = extract_header_block(&content, style);
+    let header_block = extract_header_block(&content, style, indicators);
 
     let new_content = match header_block {
         Some(existing) => {
             if normalize_header(&existing) == normalize_header(&expected) {
                 return Ok(false);
             }
-            // Replace existing header
             replace_header(&content, &existing, &expected, style)
         }
+        None => prepend_header(&content, &expected, style),
+    };
+
+    if new_content == content {
+        return Ok(false);
+    }
+
+    if !dry_run {
+        fs::write(path, &new_content)?;
+    }
+
+    Ok(true)
+}
+
+/// Remove the header from a file. Returns true if the file was modified.
+pub fn remove_header_from_file(
+    path: &Path,
+    style: &CommentStyle,
+    indicators: &[String],
+    dry_run: bool,
+) -> Result<bool, ForeheadError> {
+    let content = fs::read_to_string(path)?;
+
+    let header_block = extract_header_block(&content, style, indicators);
+
+    let new_content = match header_block {
+        Some(existing) => {
+            let after = content[existing.len()..].trim_start();
+            after.to_string()
+        }
+        None => return Ok(false),
+    };
+
+    if new_content == content {
+        return Ok(false);
+    }
+
+    if !dry_run {
+        fs::write(path, &new_content)?;
+    }
+
+    Ok(true)
+}
+
+/// Replace headers in a file using a template. Returns true if the file was modified.
+pub fn replace_header_on_file(
+    path: &Path,
+    template: &HeaderTemplate,
+    style: &CommentStyle,
+    subst: &Substitution,
+    indicators: &[String],
+    greetings: &str,
+    dry_run: bool,
+) -> Result<bool, ForeheadError> {
+    let content = fs::read_to_string(path)?;
+    let expected = build_expected_header(template, style, subst, greetings);
+
+    let header_block = extract_header_block(&content, style, indicators);
+
+    let new_content = match header_block {
+        Some(existing) => {
+            if normalize_header(&existing) == normalize_header(&expected) {
+                return Ok(false);
+            }
+            let after = content[existing.len()..].trim_start();
+            format!("{}\n\n{}", expected, after)
+        }
         None => {
-            // No header found, prepend it
-            prepend_header(&content, &expected, style)
+            let trimmed = content.trim_start();
+            format!("{}\n\n{}", expected, trimmed)
         }
     };
 
@@ -113,8 +182,27 @@ pub fn apply_header_to_file(
     Ok(true)
 }
 
+fn build_expected_header(
+    template: &HeaderTemplate,
+    style: &CommentStyle,
+    subst: &Substitution,
+    greetings: &str,
+) -> String {
+    let mut all_lines = template.lines.clone();
+    if !greetings.is_empty() {
+        let substituted = substitute_header_text(greetings, subst);
+        all_lines.insert(0, substituted);
+    }
+    let formatted = format_as_comment(&all_lines, style);
+    substitute_header(&formatted, subst)
+}
+
 /// Extract the header comment block from file content
-fn extract_header_block(content: &str, style: &CommentStyle) -> Option<String> {
+fn extract_header_block(
+    content: &str,
+    style: &CommentStyle,
+    indicators: &[String],
+) -> Option<String> {
     let lines: Vec<&str> = content.lines().collect();
     if lines.is_empty() {
         return None;
@@ -123,14 +211,14 @@ fn extract_header_block(content: &str, style: &CommentStyle) -> Option<String> {
     match style {
         CommentStyle::Line(prefix) => {
             let mut header_lines = Vec::new();
-            let mut has_license_indicator = false;
+            let mut has_indicator = indicators.is_empty(); // if no indicators, any block qualifies
 
             for line in &lines {
                 let trimmed = line.trim();
                 if trimmed.starts_with(prefix) {
                     header_lines.push(*line);
-                    if is_license_line(trimmed) {
-                        has_license_indicator = true;
+                    if !has_indicator {
+                        has_indicator = is_header_line(trimmed, indicators);
                     }
                 } else if trimmed.is_empty() {
                     if !header_lines.is_empty() {
@@ -143,7 +231,7 @@ fn extract_header_block(content: &str, style: &CommentStyle) -> Option<String> {
                 }
             }
 
-            if header_lines.is_empty() || !has_license_indicator {
+            if header_lines.is_empty() || !has_indicator {
                 None
             } else {
                 Some(header_lines.join("\n"))
@@ -153,13 +241,16 @@ fn extract_header_block(content: &str, style: &CommentStyle) -> Option<String> {
             let mut in_block = false;
             let mut block_lines = Vec::new();
             let mut found = false;
+            let mut has_indicator = indicators.is_empty();
 
             for line in &lines {
                 let trimmed = line.trim();
                 if trimmed.starts_with(open) && !in_block {
-                    // Check if this looks like a license comment
                     let rest = trimmed.strip_prefix(open).unwrap_or("").trim();
-                    if is_license_line(rest) || rest.is_empty() {
+                    if !has_indicator {
+                        has_indicator = is_header_line(rest, indicators);
+                    }
+                    if has_indicator || rest.is_empty() {
                         in_block = true;
                         block_lines.push(*line);
                     } else {
@@ -167,6 +258,9 @@ fn extract_header_block(content: &str, style: &CommentStyle) -> Option<String> {
                     }
                 } else if in_block {
                     block_lines.push(*line);
+                    if !has_indicator {
+                        has_indicator = is_header_line(trimmed, indicators);
+                    }
                     if trimmed.ends_with(close) {
                         found = true;
                         break;
@@ -176,17 +270,17 @@ fn extract_header_block(content: &str, style: &CommentStyle) -> Option<String> {
                 }
             }
 
-            if found {
+            if found && has_indicator {
                 Some(block_lines.join("\n"))
             } else {
                 None
             }
         }
         CommentStyle::BlockTriple(_delim) => {
-            // For triple-quote style, we detect """ or ''' on its own line
             let mut in_block = false;
             let mut block_lines = Vec::new();
             let mut found = false;
+            let mut has_indicator = indicators.is_empty();
 
             for line in &lines {
                 let trimmed = line.trim();
@@ -195,6 +289,9 @@ fn extract_header_block(content: &str, style: &CommentStyle) -> Option<String> {
                     block_lines.push(*line);
                 } else if in_block {
                     block_lines.push(*line);
+                    if !has_indicator {
+                        has_indicator = is_header_line(trimmed, indicators);
+                    }
                     if trimmed == "\"\"\"" || trimmed == "'''" {
                         found = true;
                         break;
@@ -204,7 +301,7 @@ fn extract_header_block(content: &str, style: &CommentStyle) -> Option<String> {
                 }
             }
 
-            if found {
+            if found && has_indicator {
                 Some(block_lines.join("\n"))
             } else {
                 None
@@ -213,12 +310,12 @@ fn extract_header_block(content: &str, style: &CommentStyle) -> Option<String> {
     }
 }
 
-fn is_license_line(line: &str) -> bool {
+fn is_header_line(line: &str, indicators: &[String]) -> bool {
+    if indicators.is_empty() {
+        return true;
+    }
     let lower = line.to_lowercase();
-    lower.contains("copyright")
-        || lower.contains("spdx")
-        || lower.contains("license")
-        || lower.contains("بِسْمِ اللَّهِ")
+    indicators.iter().any(|i| lower.contains(&i.to_lowercase()))
 }
 
 fn normalize_header(header: &str) -> String {
@@ -231,8 +328,11 @@ fn normalize_header(header: &str) -> String {
 }
 
 fn substitute_header(header: &str, subst: &Substitution) -> String {
-    header
-        .replace("{project}", &subst.project)
+    substitute_header_text(header, subst)
+}
+
+fn substitute_header_text(text: &str, subst: &Substitution) -> String {
+    text.replace("{project}", &subst.project)
         .replace("{author}", &subst.author)
         .replace("{year}", &subst.year)
         .replace("{year_span}", &subst.year_span)
@@ -386,16 +486,34 @@ mod tests {
     }
 
     // Helper functions that work on strings directly
+    fn default_indicators() -> Vec<String> {
+        vec![
+            "Copyright".to_string(),
+            "SPDX".to_string(),
+            "License".to_string(),
+        ]
+    }
+
     fn apply_header_to_file_str(
         content: &str,
         template: &HeaderTemplate,
         style: &CommentStyle,
         subst: &Substitution,
     ) -> String {
-        let expected_header = format_as_comment(&template.lines, style);
-        let expected = substitute_header(&expected_header, subst);
+        apply_header_to_file_str_with(content, template, style, subst, &default_indicators(), "")
+    }
 
-        let header_block = extract_header_block(content, style);
+    fn apply_header_to_file_str_with(
+        content: &str,
+        template: &HeaderTemplate,
+        style: &CommentStyle,
+        subst: &Substitution,
+        indicators: &[String],
+        greetings: &str,
+    ) -> String {
+        let expected = build_expected_header(template, style, subst, greetings);
+
+        let header_block = extract_header_block(content, style, indicators);
 
         match header_block {
             Some(existing) => {
@@ -414,10 +532,20 @@ mod tests {
         style: &CommentStyle,
         subst: &Substitution,
     ) -> FileStatus {
-        let expected_header = format_as_comment(&template.lines, style);
-        let expected = substitute_header(&expected_header, subst);
+        check_header_on_file_str_with(content, template, style, subst, &default_indicators(), "")
+    }
 
-        let header_block = extract_header_block(content, style);
+    fn check_header_on_file_str_with(
+        content: &str,
+        template: &HeaderTemplate,
+        style: &CommentStyle,
+        subst: &Substitution,
+        indicators: &[String],
+        greetings: &str,
+    ) -> FileStatus {
+        let expected = build_expected_header(template, style, subst, greetings);
+
+        let header_block = extract_header_block(content, style, indicators);
 
         match header_block {
             Some(existing) => {
@@ -429,5 +557,59 @@ mod tests {
             }
             None => FileStatus::Missing,
         }
+    }
+
+    #[test]
+    fn test_greetings_in_header() {
+        let template = HeaderTemplate::new(
+            "Copyright (C) {year_span} {author}.\nSPDX-License-Identifier: {license}.",
+        );
+        let style = CommentStyle::Line("//".into());
+        let subst = test_subst();
+
+        let content = "// بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم\n// Copyright (C) 2026-Present Test Author.\n// SPDX-License-Identifier: Apache-2.0 OR MIT.\n\npub fn hello() {}\n";
+
+        let expected = "// بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم\n// Copyright (C) 2026-Present Test Author.\n// SPDX-License-Identifier: Apache-2.0 OR MIT.\n\npub fn hello() {}\n";
+
+        let result = apply_header_to_file_str_with(
+            content,
+            &template,
+            &style,
+            &subst,
+            &default_indicators(),
+            "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم",
+        );
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_custom_indicator() {
+        let template = HeaderTemplate::new("CustomTag: Active\nCopyright (C) {year_span} {author}.\nSPDX-License-Identifier: {license}.");
+        let style = CommentStyle::Line("//".into());
+        let subst = test_subst();
+        let mut indicators = default_indicators();
+        indicators.push("CustomTag".to_string());
+
+        let content = "// CustomTag: Active\n// Copyright (C) 2026-Present Test Author.\n// SPDX-License-Identifier: Apache-2.0 OR MIT.\n\npub fn hello() {}\n";
+
+        let status =
+            check_header_on_file_str_with(content, &template, &style, &subst, &indicators, "");
+        assert_eq!(status, FileStatus::Correct);
+    }
+
+    #[test]
+    fn test_none_indicator() {
+        let template = HeaderTemplate::new(
+            "Copyright (C) {year_span} {author}.\nSPDX-License-Identifier: {license}.",
+        );
+        let style = CommentStyle::Line("//".into());
+        let subst = test_subst();
+        let indicators: Vec<String> = vec![]; // "none" sentinel results in empty vec
+
+        let content = "// Some random comment.\n// Another random line.\n\npub fn hello() {}\n";
+
+        let status =
+            check_header_on_file_str_with(content, &template, &style, &subst, &indicators, "");
+        assert_eq!(status, FileStatus::Wrong);
     }
 }

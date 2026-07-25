@@ -1,6 +1,7 @@
+// بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم
 // This file is part of forehead.
 //
-// Copyright (C) 2026-Present Afsall Labs.
+// Copyright (C) 2026-Present Afsall Inc.
 // SPDX-License-Identifier: Apache-2.0 OR MIT
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -96,5 +97,19 @@ pub enum Command {
         /// Path to write the config file
         #[arg(short, long, default_value = "forehead.toml")]
         path: String,
+    },
+    /// Remove license headers from all source files
+    Remove {
+        /// Path to forehead.toml config
+        #[arg(short, long, default_value = "forehead.toml")]
+        config: String,
+
+        /// Dry run — show what would be changed without modifying
+        #[arg(short, long)]
+        dry_run: bool,
+
+        /// Directory to process
+        #[arg(short, long)]
+        path: Option<String>,
     },
 }
