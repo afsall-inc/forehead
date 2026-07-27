@@ -35,70 +35,88 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-name: Release
+name: CD
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 env:
-  CARGO_TERM_COLOR: always
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  release:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      changed: ${{ steps.version.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Detect version bump
+        id: version
+        run: |
+          VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if git show HEAD~1:Cargo.toml 2>/dev/null | grep -q "^version = \"$VERSION\""; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  publish:
+    needs: detect
+    if: needs.detect.outputs.changed == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
-
+      contents: read
+      packages: write
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 2
+      - uses: actions/checkout@v4
 
-    - name: Extract version
-      id: version
-      run: |
-        VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
-        echo "value=$VERSION" >> "$GITHUB_OUTPUT"
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@v1
+        with:
+          toolchain: stable
 
-    - name: Check if version changed
-      id: changed
-      run: |
-        git show HEAD~1:Cargo.toml 2>/dev/null | grep -q "version = \"${{ steps.version.outputs.version }}\"" && echo "changed=false" >> "$GITHUB_OUTPUT" || echo "changed=true" >> "$GITHUB_OUTPUT"
+      - name: Publish forehead-core
+        run: cargo publish -p forehead-core
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
-    - name: Check if release exists
-      id: release
-      run: |
-        git fetch --tags --force
-        if gh release view "v${{ steps.version.outputs.version }}" >/dev/null 2>&1; then
-          echo "exists=true" >> "$GITHUB_OUTPUT"
-        else
-          echo "exists=false" >> "$GITHUB_OUTPUT"
-        fi
+      - name: Publish forehead-cli
+        run: cargo publish -p forehead-cli
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
-    - name: Install Rust
-      if: steps.changed.outputs.changed == 'true' && steps.release.outputs.exists == 'false'
-      uses: dtolnay/rust-toolchain@v1
-      with:
-        toolchain: stable
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Publish forehead-core
-      if: steps.changed.outputs.changed == 'true' && steps.release.outputs.exists == 'false'
-      run: cargo publish -p forehead-core
-      env:
-        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Publish forehead-cli
-      if: steps.changed.outputs.changed == 'true' && steps.release.outputs.exists == 'false'
-      run: cargo publish -p forehead-cli
-      env:
-        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}},value=v${{ needs.detect.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=v${{ needs.detect.outputs.version }}
+            type=raw,value=latest
 
-    - name: Create release
-      if: steps.changed.outputs.changed == 'true' && steps.release.outputs.exists == 'false'
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        gh release create "v${{ steps.version.outputs.version }}" \
-          --title "v${{ steps.version.outputs.version }}" \
-          --generate-notes
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
