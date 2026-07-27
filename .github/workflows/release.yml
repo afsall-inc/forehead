@@ -47,6 +47,8 @@ env:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - uses: actions/checkout@v4
@@ -100,7 +102,7 @@ jobs:
         git config user.name "github-actions"
         git config user.email "github-actions@github.com"
         git tag "v${{ steps.version.outputs.version }}"
-        git push origin "v${{ steps.version.outputs.version }}"
+        git push "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" "v${{ steps.version.outputs.version }}"
         gh release create "v${{ steps.version.outputs.version }}" \
           --title "v${{ steps.version.outputs.version }}" \
           --generate-notes
