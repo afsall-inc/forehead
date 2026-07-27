@@ -6,9 +6,10 @@ license = "Apache-2.0 OR MIT"
 authors.workspace = true
 repository.workspace = true
 description.workspace = true
+readme = "README.md"
 
 [dependencies]
-forehead-core = { path = "../forehead-core" }
+forehead-core = { path = "../forehead-core", version = "0.1.2" }
 clap.workspace = true
 anyhow.workspace = true
 serde.workspace = true
