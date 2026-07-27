@@ -63,8 +63,15 @@ jobs:
         run: |
           VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
           echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
-      - name: Build
+- name: Build
         run: cargo build --release --workspace
+
+      - name: Generate changelog
+        run: |
+          cargo install changelogger-cli
+          changelogger changelog generate --from "${{ github.ref_name }}"
+          changelogger changelog bump --current "${{ steps.version.outputs.VERSION }}"
+
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

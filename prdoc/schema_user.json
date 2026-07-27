@@ -39,8 +39,9 @@
   "$defs": {
     "audience": {
       "oneOf": [
-        {"const": "Framework Dev", "title": "Framework Dev"},
-        {"const": "App Dev", "title": "App Dev"}
+        {"const": "Developer", "title": "Developer"},
+        {"const": "User", "title": "User"},
+        {"const": "Operator", "title": "Operator"}
       ]
     },
     "crate": {
