@@ -86,3 +86,8 @@ jobs:
         run: cargo publish -p forehead-cli
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Validate changelog
+        run: |
+          cargo install changelogger-cli
+          changelogger changelog verify --from "v$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')"

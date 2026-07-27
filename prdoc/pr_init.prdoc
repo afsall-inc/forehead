@@ -2,7 +2,7 @@
 title: "feat: initial forehead implementation — Rust tool for license headers"
 
 doc:
-  - audience: Framework Dev
+  - audience: Developer
     description: |
       Initial implementation of forehead, a Rust tool for creating and
       maintaining file headers for code license. Includes:

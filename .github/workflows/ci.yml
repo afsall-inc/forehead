@@ -78,14 +78,14 @@ jobs:
     - name: Validate PRDoc
       if: github.event_name == 'pull_request'
       env:
-        CI: "true"
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        PRDOC="prdoc/pr_${{ github.event.pull_request.number }}.prdoc"
-        if [ -f "$PRDOC" ]; then
-          echo "Validating $PRDOC"
-        else
-          echo "No prdoc found at $PRDOC (skipping validation)"
+        cargo install changelogger-cli
+        PR_NUM=${{ github.event.pull_request.number }}
+        if [ ! -f "prdoc/pr_${PR_NUM}.prdoc" ]; then
+          changelogger prdoc generate --pr "$PR_NUM" --force
         fi
+        changelogger prdoc validate "prdoc/pr_${PR_NUM}.prdoc"
 
     - name: Build
       run: cargo build --workspace --release
