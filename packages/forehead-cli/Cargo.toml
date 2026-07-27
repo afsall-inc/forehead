@@ -9,7 +9,7 @@ description.workspace = true
 readme = "README.md"
 
 [dependencies]
-forehead-core = { path = "../forehead-core", version = "0.1.2" }
+forehead-core = { path = "../forehead-core", version = "0.1.3" }
 clap.workspace = true
 anyhow.workspace = true
 serde.workspace = true
