@@ -6,6 +6,7 @@ license = "Apache-2.0 OR MIT"
 authors.workspace = true
 repository.workspace = true
 description.workspace = true
+readme = "README.md"
 
 [dependencies]
 serde.workspace = true
