@@ -22,11 +22,20 @@ cargo build --release
 # Apply headers to all source files
 forehead apply
 
+# Preview changes without modifying
+forehead apply --dry-run
+
 # Check headers (CI mode — exits 1 on failure)
 forehead check
 
 # List files with their header status
 forehead list
+
+# Remove headers from all source files
+forehead remove
+
+# Preview removals without modifying
+forehead remove --dry-run
 
 # Scaffold a forehead.toml config
 forehead init
@@ -142,6 +151,9 @@ if !report.is_clean() {
     eprintln!("Headers missing on: {:?}", report.missing);
     std::process::exit(1);
 }
+
+// Remove headers
+let report = forehead.remove(false)?;
 ```
 
 ## License

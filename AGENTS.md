@@ -4,8 +4,11 @@
 
 ```bash
 forehead apply        # Apply headers to all source files
+forehead apply --dry-run  # Preview changes without modifying
 forehead check        # CI mode — exit 1 on missing/wrong headers
 forehead list         # List files with header status
+forehead remove       # Remove headers from all source files
+forehead remove --dry-run  # Preview removals without modifying
 forehead init         # Scaffold forehead.toml
 ```
 
