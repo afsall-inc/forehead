@@ -80,12 +80,14 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        cargo install changelogger-cli
         PR_NUM=${{ github.event.pull_request.number }}
-        if [ ! -f "prdoc/pr_${PR_NUM}.prdoc" ]; then
-          changelogger prdoc generate --pr "$PR_NUM" --force
+        PRDOC="prdoc/pr_${PR_NUM}.prdoc"
+        if [ -f "$PRDOC" ]; then
+          cargo install changelogger-cli
+          changelogger prdoc validate "$PRDOC"
+        else
+          echo "No prdoc found at $PRDOC. Create one with: changelogger prdoc generate --pr $PR_NUM"
         fi
-        changelogger prdoc validate "prdoc/pr_${PR_NUM}.prdoc"
 
     - name: Build
       run: cargo build --workspace --release
