@@ -38,7 +38,10 @@
 use crate::{
     config::Config,
     error::ForeheadError,
-    header::{apply_header_to_file, check_header_on_file, remove_header_from_file, FileStatus},
+    header::{
+        apply_header_to_file, check_header_on_file, remove_header_from_file,
+        replace_header_on_file, FileStatus,
+    },
 };
 use std::{fs, path::Path};
 use walkdir::WalkDir;
@@ -247,6 +250,45 @@ impl Forehead {
             };
 
             match remove_header_from_file(&path, &comment_style, &indicators, dry_run) {
+                Ok(true) => report.applied.push(rel),
+                Ok(false) => {}
+                Err(e) => report.errors.push((rel, e.to_string())),
+            }
+        }
+
+        Ok(report)
+    }
+
+    pub fn replace(&self, dry_run: bool) -> Result<ApplyReport, ForeheadError> {
+        let mut report = ApplyReport::new();
+        let indicators = self.config.header.all_indicators();
+        let greetings = &self.config.header.greetings;
+
+        for entry in self.walk_entries() {
+            let path = entry.path().to_path_buf();
+            let fname = entry.file_name().to_str().unwrap_or("").to_string();
+            let rel = path.strip_prefix(&self.root).unwrap_or(&path).to_path_buf();
+
+            if fname == "Cargo.toml" || fname == "Cargo.lock" {
+                continue;
+            }
+
+            let comment_style = match comment::comment_style_for(&path) {
+                Some(s) => s,
+                None => continue,
+            };
+
+            let template = match self.config.template_for(&path, &self.root) {
+                Some(t) => t,
+                None => continue,
+            };
+
+            let subst = self.config.substitution_for(&path, &self.root);
+
+            match replace_header_on_file(
+                &path, &template, &comment_style, &subst,
+                &indicators, greetings, dry_run,
+            ) {
                 Ok(true) => report.applied.push(rel),
                 Ok(false) => {}
                 Err(e) => report.errors.push((rel, e.to_string())),

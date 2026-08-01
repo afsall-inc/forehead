@@ -112,4 +112,18 @@ pub enum Command {
         #[arg(short, long)]
         path: Option<String>,
     },
+    /// Replace invalid or old headers with the correct one
+    Replace {
+        /// Path to forehead.toml config
+        #[arg(short, long, default_value = "forehead.toml")]
+        config: String,
+
+        /// Dry run — show what would be changed without modifying
+        #[arg(short, long)]
+        dry_run: bool,
+
+        /// Directory to process
+        #[arg(short, long)]
+        path: Option<String>,
+    },
 }

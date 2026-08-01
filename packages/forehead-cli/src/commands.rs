@@ -55,6 +55,11 @@ pub fn run(cli: &Cli) -> Result<()> {
             dry_run,
             path,
         } => remove(config, *dry_run, path.as_deref()),
+        Command::Replace {
+            config,
+            dry_run,
+            path,
+        } => replace(config, *dry_run, path.as_deref()),
     }
 }
 
@@ -244,6 +249,40 @@ fn remove(config_path: &str, dry_run: bool, path: Option<&str>) -> Result<()> {
 
     if report.is_empty() {
         println!("No headers to remove.");
+    }
+
+    Ok(())
+}
+
+fn replace(config_path: &str, dry_run: bool, path: Option<&str>) -> Result<()> {
+    let config_path = Path::new(config_path);
+    let forehead = if let Some(p) = path {
+        let mut config = forehead_core::config::Config::from_path(config_path)
+            .context("failed to read config")?;
+        config.project_dir = Path::new(p).to_path_buf();
+        Forehead::new(config)
+    } else {
+        Forehead::from_config_path(config_path).context("failed to read config")?
+    };
+
+    let report = forehead.replace(dry_run).context("failed to replace headers")?;
+
+    if dry_run {
+        for path in &report.applied {
+            println!("WOULD REPLACE: {}", path.display());
+        }
+    } else {
+        for path in &report.applied {
+            println!("REPLACED: {}", path.display());
+        }
+    }
+
+    for (path, err) in &report.errors {
+        eprintln!("ERROR on {}: {}", path.display(), err);
+    }
+
+    if report.is_empty() {
+        println!("All headers are correct.");
     }
 
     Ok(())
