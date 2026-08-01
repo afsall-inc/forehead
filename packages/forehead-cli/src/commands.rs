@@ -265,7 +265,9 @@ fn replace(config_path: &str, dry_run: bool, path: Option<&str>) -> Result<()> {
         Forehead::from_config_path(config_path).context("failed to read config")?
     };
 
-    let report = forehead.replace(dry_run).context("failed to replace headers")?;
+    let report = forehead
+        .replace(dry_run)
+        .context("failed to replace headers")?;
 
     if dry_run {
         for path in &report.applied {

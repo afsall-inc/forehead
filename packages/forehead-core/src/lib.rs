@@ -286,8 +286,13 @@ impl Forehead {
             let subst = self.config.substitution_for(&path, &self.root);
 
             match replace_header_on_file(
-                &path, &template, &comment_style, &subst,
-                &indicators, greetings, dry_run,
+                &path,
+                &template,
+                &comment_style,
+                &subst,
+                &indicators,
+                greetings,
+                dry_run,
             ) {
                 Ok(true) => report.applied.push(rel),
                 Ok(false) => {}
