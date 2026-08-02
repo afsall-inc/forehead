@@ -1,0 +1,17 @@
+---
+title: "feat: remove .md header support, add forehead remove command, enable greetings"
+
+doc:
+  - audience: Developer
+    description: |
+      - Added [header] config section with `indicators` and `greetings` support
+      - Added `forehead remove` command to strip headers from source files
+      - Removed .md header support
+      - Rebranded to Afsall Inc, bumped to v0.1.1
+
+crates:
+  - name: forehead-core
+    bump: minor
+  - name: forehead-cli
+    bump: minor
+---

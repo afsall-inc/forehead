@@ -1,0 +1,14 @@
+---
+title: "chore: fix release workflow permissions and push auth"
+
+doc:
+  - audience: Developer
+    description: |
+      Fixed release workflow permissions and push authentication for crates.io publishing.
+
+crates:
+  - name: forehead-core
+    bump: none
+  - name: forehead-cli
+    bump: none
+---

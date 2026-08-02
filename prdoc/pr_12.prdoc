@@ -1,0 +1,16 @@
+---
+title: "feat: replace prdoc with changelogger, bump v0.1.4"
+
+doc:
+  - audience: Developer
+    description: |
+      - Replaced custom PRDoc infrastructure with changelogger-cli
+      - Updated CI/CD workflows to use changelogger
+      - Bumped to v0.1.4
+
+crates:
+  - name: forehead-core
+    bump: patch
+  - name: forehead-cli
+    bump: patch
+---

@@ -1,0 +1,16 @@
+---
+title: "chore: fix CI — validate existing prdoc, don't auto-generate"
+
+doc:
+  - audience: Developer
+    description: |
+      - Fixed CI workflow to validate existing prdoc files instead of auto-generating
+      - Fixed cd.yml indentation
+      - Skip publish if crate version already exists on crates.io
+
+crates:
+  - name: forehead-core
+    bump: none
+  - name: forehead-cli
+    bump: none
+---

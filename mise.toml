@@ -54,3 +54,7 @@ run = "cargo run --package forehead-cli -- apply"
 [tasks.ci]
 description = "Run all CI checks"
 depends = ["fmt", "headers", "clippy", "test", "build"]
+
+[tasks.changelogger]
+description = "Install changelogger-cli v0.2.1"
+run = "cargo install changelogger-cli --version 0.2.1"

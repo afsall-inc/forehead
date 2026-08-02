@@ -1,0 +1,15 @@
+---
+title: "docs: update AGENTS.md and README.md with remove command and dry-run"
+
+doc:
+  - audience: Developer
+    description: |
+      - Updated AGENTS.md and README.md with documentation for the `remove` command and dry-run mode
+      - Bumped to v0.1.3
+
+crates:
+  - name: forehead-core
+    bump: patch
+  - name: forehead-cli
+    bump: patch
+---

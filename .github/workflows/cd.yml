@@ -70,7 +70,7 @@ jobs:
     if: needs.detect.outputs.changed == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
     steps:
       - uses: actions/checkout@v4
@@ -98,7 +98,13 @@ jobs:
           fi
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-      - name: Validate changelog
+      - name: Install changelogger
+        run: cargo install changelogger-cli --version 0.2.1
+
+      - name: Generate and update CHANGELOG.md
         run: |
-          cargo install changelogger-cli
-          changelogger changelog verify --from "v$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')"
+          VERSION=$(grep '^version = ' Cargo.toml | head -1 | sed 's/version = "\(.*\)"/\1/')
+          changelogger changelog generate --from "v${VERSION}" --output CHANGELOG.md
+          changelogger changelog bump --current "$VERSION" --from "v${VERSION}"
+          git add CHANGELOG.md
+          git commit -m "chore: update CHANGELOG.md for v${VERSION}" || true

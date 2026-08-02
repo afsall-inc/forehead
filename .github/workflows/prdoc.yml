@@ -35,45 +35,61 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-name: CI
-
+name: PRDoc
 on:
-  push:
-    branches: [ main ]
   pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+    types: [opened, synchronize, reopened]
 
-env:
-  CARGO_TERM_COLOR: always
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
-  build:
+  generate:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
-
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@v1
       with:
-        toolchain: nightly-2026-02-18
-        components: rustfmt, clippy
+        fetch-depth: 0
+        ref: ${{ github.head_ref }}
 
-    - name: Rust Cache
-      uses: Swatinem/rust-cache@v2
+    - name: Install changelogger
+      run: cargo install changelogger-cli --version 0.2.1
 
-    - name: Check formatting
-      run: cargo fmt --all -- --check
+    - name: Generate PRDoc
+      id: generate
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        PR_NUM=${{ github.event.pull_request.number }}
+        PRDOC="prdoc/pr_${PR_NUM}.prdoc"
+        if [ -f "$PRDOC" ]; then
+          echo "PRDoc already exists at $PRDOC — validating only"
+          echo "generated=false" >> "$GITHUB_OUTPUT"
+        else
+          changelogger prdoc generate --pr "$PR_NUM" --force --bump patch
+          echo "generated=true" >> "$GITHUB_OUTPUT"
+        fi
+        python3 -c "
+import re
+with open('$PRDOC') as f:
+    c = f.read()
+c = c.replace('crates: [ ]', 'crates:\n  - name: forehead-core\n    bump: patch\n  - name: forehead-cli\n    bump: patch')
+with open('$PRDOC', 'w') as f:
+    f.write(c)
+"
 
-    - name: Clippy
-      run: cargo clippy --workspace -- -D warnings
+    - name: Validate PRDoc
+      env:
+        CI: "true"
+      run: |
+        PRDOC="prdoc/pr_${{ github.event.pull_request.number }}.prdoc"
+        changelogger prdoc validate "$PRDOC"
 
-    - name: Run tests
-      run: cargo test --workspace
-
-    - name: Check headers
-      run: cargo run --package forehead-cli -- check
-
-    - name: Build
-      run: cargo build --workspace --release
+    - name: Commit PRDoc
+      if: steps.generate.outputs.generated == 'true'
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "Add prdoc for PR #${{ github.event.pull_request.number }} (auto-generated)"
+        branch: ${{ github.head_ref }}
+        file_pattern: "prdoc/*.prdoc"

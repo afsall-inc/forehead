@@ -1,0 +1,16 @@
+---
+title: "chore: add CI/CD release workflow with auto-publish on version bump"
+
+doc:
+  - audience: Developer
+    description: |
+      - Added CI/CD release workflow that auto-publishes to crates.io on version bump
+      - Added README documentation for crates
+      - Bumped to v0.1.2
+
+crates:
+  - name: forehead-core
+    bump: patch
+  - name: forehead-cli
+    bump: patch
+---
