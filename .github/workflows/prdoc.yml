@@ -3,37 +3,6 @@
 #
 # Copyright (C) 2026-Present Afsall Inc.
 # SPDX-License-Identifier: Apache-2.0 OR MIT
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-# Alternatively, this file is available under the MIT License:
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all
-# copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-# SOFTWARE.
 
 name: PRDoc
 on:
@@ -52,10 +21,13 @@ jobs:
       with:
         fetch-depth: 0
         ref: ${{ github.head_ref }}
-
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@v1
+      with:
+        toolchain: stable
+    - uses: Swatinem/rust-cache@v2
     - name: Install changelogger
       run: cargo install changelogger-cli --version 0.2.1
-
     - name: Generate PRDoc
       id: generate
       env:
@@ -64,28 +36,23 @@ jobs:
         PR_NUM=${{ github.event.pull_request.number }}
         PRDOC="prdoc/pr_${PR_NUM}.prdoc"
         if [ -f "$PRDOC" ]; then
-          echo "PRDoc already exists at $PRDOC — validating only"
+          echo "PRDoc already exists — validating only"
           echo "generated=false" >> "$GITHUB_OUTPUT"
         else
-          changelogger prdoc generate --pr "$PR_NUM" --force --bump patch
+          changelogger prdoc generate --pr "$PR_NUM" --force
           echo "generated=true" >> "$GITHUB_OUTPUT"
         fi
-        python3 -c "
-import re
-with open('$PRDOC') as f:
-    c = f.read()
-c = c.replace('crates: [ ]', 'crates:\n  - name: forehead-core\n    bump: patch\n  - name: forehead-cli\n    bump: patch')
-with open('$PRDOC', 'w') as f:
-    f.write(c)
-"
-
     - name: Validate PRDoc
       env:
         CI: "true"
       run: |
         PRDOC="prdoc/pr_${{ github.event.pull_request.number }}.prdoc"
         changelogger prdoc validate "$PRDOC"
-
+    - name: Validate Backport Rules
+      if: startsWith(github.base_ref, 'stable') || startsWith(github.base_ref, 'release')
+      run: |
+        PRDOC="prdoc/pr_${{ github.event.pull_request.number }}.prdoc"
+        changelogger prdoc validate --branch "${{ github.base_ref }}" "$PRDOC"
     - name: Commit PRDoc
       if: steps.generate.outputs.generated == 'true'
       uses: stefanzweifel/git-auto-commit-action@v5
