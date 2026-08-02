@@ -88,9 +88,10 @@ jobs:
         if [ -f "$PRDOC" ]; then
           changelogger prdoc validate "$PRDOC"
         else
-          echo "No prdoc found — auto-generating one..."
+          echo "No prdoc found — auto-generating skeleton..."
           changelogger prdoc generate --pr "$PR_NUM"
-          changelogger prdoc validate "$PRDOC"
+          echo "::error::prdoc/pr_${PR_NUM}.prdoc generated — fill in the placeholders and commit it"
+          exit 1
         fi
 
     - name: Build
