@@ -52,7 +52,7 @@ jobs:
       - name: Install changelogger
         run: cargo install changelogger-cli --version 0.2.1
       - name: Generate CHANGELOG
-        run: changelogger changelog generate --dir prdoc --output CHANGELOG.md
+        run: changelogger changelog generate --dir prdoc --output CHANGELOG.md --release "${{ needs.detect.outputs.version }}"
       - name: Commit and tag
         run: |
           VERSION=${{ needs.detect.outputs.version }}
