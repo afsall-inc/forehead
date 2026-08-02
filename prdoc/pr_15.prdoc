@@ -1,0 +1,15 @@
+---
+title: "feat: add forehead replace command"
+
+doc:
+  - audience: Developer
+    description: |
+      - Added `forehead replace` command for replacing headers in source files
+      - cargo fmt formatting fixes
+
+crates:
+  - name: forehead-core
+    bump: minor
+  - name: forehead-cli
+    bump: minor
+---

@@ -75,7 +75,10 @@ jobs:
     - name: Check headers
       run: cargo run --package forehead-cli -- check
 
-    - name: Validate PRDoc
+    - name: Install changelogger
+      run: cargo install changelogger-cli --version 0.2.1
+
+    - name: Validate or generate PRDoc
       if: github.event_name == 'pull_request'
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -83,10 +86,11 @@ jobs:
         PR_NUM=${{ github.event.pull_request.number }}
         PRDOC="prdoc/pr_${PR_NUM}.prdoc"
         if [ -f "$PRDOC" ]; then
-          cargo install changelogger-cli
           changelogger prdoc validate "$PRDOC"
         else
-          echo "No prdoc found at $PRDOC. Create one with: changelogger prdoc generate --pr $PR_NUM"
+          echo "No prdoc found — auto-generating one..."
+          changelogger prdoc generate --pr "$PR_NUM"
+          changelogger prdoc validate "$PRDOC"
         fi
 
     - name: Build

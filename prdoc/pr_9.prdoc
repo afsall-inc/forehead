@@ -1,0 +1,14 @@
+---
+title: "chore: fix release workflow — use gh release create"
+
+doc:
+  - audience: Developer
+    description: |
+      Fixed release workflow to use `gh release create` for GitHub Releases.
+
+crates:
+  - name: forehead-core
+    bump: none
+  - name: forehead-cli
+    bump: none
+---

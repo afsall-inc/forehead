@@ -28,15 +28,25 @@ The `forehead.toml` file defines project metadata, header templates, path-based 
 - Config path is `forehead.toml` by default
 - Template paths are relative to the config file
 
+## PRDoc
+
+Each PR requires a `prdoc/pr_<number>.prdoc` file. Use changelogger to manage them:
+
+```bash
+changelogger prdoc generate --pr <NUMBER>   # Auto-generate prdoc skeleton
+changelogger prdoc validate prdoc/pr_*.prdoc # Validate all prdocs
+changelogger changelog verify --from <TAG>   # Verify all commits have prdocs
+changelogger changelog generate --from <TAG> # Generate CHANGELOG.md
+changelogger changelog bump --current <VER>  # Compute next version
+```
+
+Config: `changelogger.toml` — defines schema, output dir, template, and audiences.
+
 ## CI Order
 
 ```bash
-mise run ci        # fmt → clippy → test → build
+mise run ci        # fmt → clippy → test → build → headers
 ```
-
-## PRDoc
-
-Each PR requires a `prdoc/pr_<number>.prdoc` file. See `prdoc.md` for details.
 
 ## Toolchain
 

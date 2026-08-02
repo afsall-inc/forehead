@@ -1,0 +1,14 @@
+---
+title: "chore: align Docker tag format with release tag (v prefix)"
+
+doc:
+  - audience: Operator
+    description: |
+      Aligned Docker image tag format to use `v` prefix, matching release tags.
+
+crates:
+  - name: forehead-core
+    bump: none
+  - name: forehead-cli
+    bump: none
+---
