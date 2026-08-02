@@ -35,45 +35,80 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-name: CI
-
+name: Command PRDoc
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
+    inputs:
+      pr:
+        type: number
+        description: Number of the Pull Request
+        required: true
+      bump:
+        type: choice
+        description: Default bump level for all crates
+        default: "patch"
+        required: true
+        options:
+          - "patch"
+          - "minor"
+          - "major"
+          - "none"
+      audience:
+        type: choice
+        description: Audience of the PRDoc
+        default: "developer"
+        required: true
+        options:
+          - "developer"
+          - "user"
+          - "operator"
+      overwrite:
+        type: boolean
+        description: Overwrite existing PRDoc
+        default: false
+        required: true
 
-env:
-  CARGO_TERM_COLOR: always
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
-  build:
+  cmd-prdoc:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 20
     steps:
-    - uses: actions/checkout@v4
+      - name: Get PR branch
+        id: pr
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          BRANCH=$(gh pr view "${{ inputs.pr }}" --json headRefName -q '.headRefName')
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@v1
-      with:
-        toolchain: nightly-2026-02-18
-        components: rustfmt, clippy
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.pr.outputs.branch }}
 
-    - name: Rust Cache
-      uses: Swatinem/rust-cache@v2
+      - name: Install changelogger
+        run: cargo install changelogger-cli --version 0.2.1
 
-    - name: Check formatting
-      run: cargo fmt --all -- --check
+      - name: Generate PRDoc
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          FLAGS=""
+          if [ "${{ inputs.overwrite }}" = "true" ]; then
+            FLAGS="--force"
+          fi
+          changelogger prdoc generate \
+            --pr "${{ inputs.pr }}" \
+            --bump "${{ inputs.bump }}" \
+            --audience "${{ inputs.audience }}" \
+            $FLAGS
 
-    - name: Clippy
-      run: cargo clippy --workspace -- -D warnings
-
-    - name: Run tests
-      run: cargo test --workspace
-
-    - name: Check headers
-      run: cargo run --package forehead-cli -- check
-
-    - name: Build
-      run: cargo build --workspace --release
+      - name: Commit PRDoc
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Add prdoc for PR #${{ inputs.pr }} (auto-generated)"
+          file_pattern: "prdoc/*.prdoc"
