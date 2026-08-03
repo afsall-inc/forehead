@@ -1,0 +1,16 @@
+---
+title: Changelogger upgrade
+author: balqaasem
+pr: 17
+
+doc:
+  - audience: Developer
+    description: |
+      Changes for PR #17
+
+crates:
+  - name: forehead-cli
+    bump: minor
+  - name: forehead-core
+    bump: minor
+---
