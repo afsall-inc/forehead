@@ -50,7 +50,7 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@v2
       - name: Install changelogger
-        run: cargo install changelogger-cli --version 0.2.1
+        run: cargo install changelogger-cli --version 0.2.2
       - name: Generate CHANGELOG
         run: changelogger changelog generate --dir prdoc --output CHANGELOG.md --release "${{ needs.detect.outputs.version }}"
       - name: Commit and tag
@@ -77,7 +77,7 @@ jobs:
           toolchain: stable
       - uses: Swatinem/rust-cache@v2
       - name: Install changelogger
-        run: cargo install changelogger-cli --version 0.2.1
+        run: cargo install changelogger-cli --version 0.2.2
       - name: Publish to crates.io
         run: changelogger publish
         env:
