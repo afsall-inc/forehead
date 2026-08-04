@@ -52,7 +52,7 @@ pub mod error;
 pub mod header;
 pub mod template;
 
-const SKIP_DIRS: &[&str] = &[".git", "target", "node_modules"];
+const SKIP_DIRS: &[&str] = &[".git", "target", "node_modules", ".github"];
 const SKIP_FILES: &[&str] = &["Cargo.lock", "forehead.toml"];
 
 pub struct Forehead {
