@@ -61,11 +61,8 @@ pub struct Config {
     #[serde(default)]
     pub file_types: HashMap<String, FileTypeConfig>,
 
-    #[serde(default)]
-    pub skip: Vec<String>,
-
-    #[serde(default)]
-    pub include: Vec<String>,
+    #[serde(default, alias = "skip")]
+    pub ignore: Vec<String>,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]

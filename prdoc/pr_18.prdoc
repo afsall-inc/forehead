@@ -1,0 +1,19 @@
+---
+title: Honor configured ignore field, skip toml files by default, deduplicate headers
+author: balqaasem
+pr: 18
+
+doc:
+  - audience: Developer
+    description: |
+      The walker now honors the configured `ignore` field (renamed from `skip`; the
+      legacy `skip` key still works as an alias). TOML files are skipped by default,
+      while `Cargo.toml` is still processed for its `license` field. Applying headers
+      now detects stale license headers anywhere in a file and replaces them instead
+      of stacking a new header on top, so headers are never duplicated.
+
+crates:
+  - name: forehead-cli
+    bump: patch
+  - name: forehead-core
+    bump: patch
