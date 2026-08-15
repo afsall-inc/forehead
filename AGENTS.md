@@ -21,6 +21,13 @@ The `forehead.toml` file defines project metadata, header templates, path-based 
 - `indicators` — extra keywords on top of built-in defaults (`Copyright`, `SPDX`, `License`) for header detection. Set to `["none"]` to disable all built-in defaults.
 - `greetings` — optional line prepended to every header. Supports template placeholders.
 
+### Top-level `ignore` field
+
+- `ignore` — list of file/dir names or relative path suffixes to exclude from processing, e.g. `ignore = ["vendor", "generated.rs"]`. Defaults to `[]`.
+- The legacy key name `skip` is still accepted as an alias for backward compatibility.
+- TOML files are always ignored by default; `Cargo.toml` is still processed for its `license` field.
+- Applying headers is idempotent — stale license headers found anywhere in a file are replaced, never duplicated.
+
 ## Invariants
 
 - All source files must have a correct license header

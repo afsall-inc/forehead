@@ -206,6 +206,10 @@ template = "mit-apache"
 # Optional line prepended to every header. Supports template placeholders.
 # greetings = "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيم"
 
+# Directories or files to exclude by name or relative path suffix.
+# TOML files are always ignored by default (Cargo.toml is still synced).
+# ignore = ["vendor", "generated.rs"]
+
 [file_types]
 "#;
 

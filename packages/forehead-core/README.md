@@ -30,6 +30,9 @@ let report = forehead.remove(false)?;
 - Template placeholders: `{project}`, `{author}`, `{year}`, `{year_span}`, `{license}`, `{repository}`, `{description}`, `{file}`
 - Optional greetings line prepended to every header
 - Headless detection, apply, check, and remove operations
+- `ignore` list to exclude files/directories by name or path suffix
+- TOML files skipped by default (Cargo.toml still gets its `license` field synced)
+- Idempotent header application — stale license headers are replaced, never duplicated
 
 ## License
 
