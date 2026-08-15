@@ -6,13 +6,17 @@ pr: 19
 doc:
   - audience: Developer
     description: |
-      The walker now honors the configured \ignore\ field (renamed from \skip\; the legacy \skip\ key still works as an alias). TOML files are skipped by default, while \Cargo.toml\ is still processed for its \license\ field. Applying headers now detects stale license headers anywhere in a file and replaces them instead of stacking a new header, so headers are never duplicated.
-      
+      The walker now honors the configured \ignore\ field (renamed from \skip\; the
+      legacy \skip\ key still works as an alias). TOML files are skipped by default,
+      while \Cargo.toml\ is still processed for its \license\ field. Applying headers
+      now detects stale license headers anywhere in a file and replaces them instead
+      of stacking a new header, so headers are never duplicated.
+
       Closes #18
 
 crates:
   - name: forehead-cli
-    bump: minor
+    bump: patch
   - name: forehead-core
-    bump: minor
+    bump: patch
 ---
