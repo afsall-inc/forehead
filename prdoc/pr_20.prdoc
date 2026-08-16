@@ -1,0 +1,18 @@
+---
+title: "docs: document ignore field, file selection, default exclusions, and dedup in README"
+author: balqaasem
+pr: 20
+
+doc:
+  - audience: Developer
+    description: |
+      Document the new \ignore\ field, file selection matching rules, default
+      exclusions, and the idempotent header application behavior in the root
+      README, AGENTS.md, and the init template.
+
+crates:
+  - name: forehead-cli
+    bump: none
+  - name: forehead-core
+    bump: none
+---
